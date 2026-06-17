@@ -1,0 +1,509 @@
+/* ============================================================
+   Layout principal (app autenticada) + Dashboard
+   ============================================================ */
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+}
+
+/* --- Barra lateral --- */
+.sidebar {
+  background: var(--verde-900);
+  color: var(--crema);
+  padding: 28px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.sidebar-logo {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  padding: 0 12px 20px;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radio);
+  color: var(--verde-200);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background var(--transicion), color var(--transicion);
+}
+
+.sidebar-link:hover {
+  background: var(--verde-700);
+  color: var(--crema);
+}
+
+.sidebar-link.activo {
+  background: var(--verde-500);
+  color: #fff;
+}
+
+.sidebar-user {
+  border-top: 1px solid var(--verde-700);
+  padding-top: 16px;
+  font-size: 13px;
+}
+
+.sidebar-user-nombre {
+  color: var(--crema);
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.sidebar-user-email {
+  color: var(--verde-200);
+  font-size: 12px;
+  margin-bottom: 12px;
+  word-break: break-all;
+}
+
+.btn-salir {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--verde-700);
+  color: var(--verde-200);
+  padding: 8px;
+  border-radius: var(--radio);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transicion), color var(--transicion);
+}
+
+.btn-salir:hover { background: var(--verde-700); color: var(--crema); }
+
+/* --- Área de contenido --- */
+.contenido {
+  padding: 36px 40px;
+  max-width: 1100px;
+  width: 100%;
+}
+
+.contenido-header {
+  margin-bottom: 28px;
+}
+
+.contenido-header h1 {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.contenido-header p {
+  color: var(--tinta-60);
+  font-size: 15px;
+  margin-top: 4px;
+}
+
+/* --- Tarjeta de patrimonio total (destacada) --- */
+.patrimonio {
+  background: var(--verde-900);
+  color: var(--crema);
+  border-radius: 16px;
+  padding: 28px 32px;
+  margin-bottom: 28px;
+}
+
+.patrimonio-label {
+  font-size: 14px;
+  color: var(--verde-200);
+  margin-bottom: 6px;
+}
+
+.patrimonio-monto {
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* --- Grilla de tarjetas de cuenta --- */
+.seccion-titulo {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.cuentas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.cuenta-card {
+  background: #fff;
+  border: 1.5px solid var(--crema-700);
+  border-radius: var(--radio);
+  padding: 18px 20px;
+}
+
+.cuenta-card-tipo {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tinta-60);
+  text-transform: capitalize;
+  letter-spacing: 0.02em;
+  margin-bottom: 8px;
+}
+
+.cuenta-card-nombre {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.cuenta-card-saldo {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.cuenta-card.inactiva { opacity: 0.55; }
+
+/* --- Tabla de movimientos --- */
+.movimientos-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border: 1.5px solid var(--crema-700);
+  border-radius: var(--radio);
+  overflow: hidden;
+}
+
+.movimientos-tabla th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tinta-60);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 12px 16px;
+  border-bottom: 1.5px solid var(--crema-700);
+  background: var(--crema);
+}
+
+.movimientos-tabla td {
+  padding: 13px 16px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--crema-700);
+}
+
+.movimientos-tabla tr:last-child td { border-bottom: none; }
+
+.monto-ingreso { color: var(--verde-500); font-weight: 600; }
+.monto-egreso { color: var(--error); font-weight: 600; }
+
+.badge-cat {
+  display: inline-block;
+  background: var(--crema-700);
+  color: var(--tinta-60);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+
+/* --- Estados vacíos / carga / error --- */
+.estado {
+  padding: 32px;
+  text-align: center;
+  color: var(--tinta-60);
+  font-size: 15px;
+  background: #fff;
+  border: 1.5px dashed var(--crema-700);
+  border-radius: var(--radio);
+}
+
+.estado-error {
+  color: var(--error);
+  border-color: var(--error);
+  background: var(--error-bg);
+}
+
+/* --- Responsive --- */
+@media (max-width: 760px) {
+  .app-shell { grid-template-columns: 1fr; }
+  .sidebar {
+    position: static;
+    height: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+  }
+  .sidebar-logo { padding: 0; }
+  .sidebar-nav { flex-direction: row; flex-wrap: wrap; flex: 1; }
+  .sidebar-user { border-top: none; padding-top: 0; display: flex; align-items: center; gap: 12px; }
+  .sidebar-user-email { display: none; }
+  .sidebar-user-nombre { margin-bottom: 0; }
+  .contenido { padding: 24px 20px; }
+}
+
+/* ============================================================
+   Presupuestos: tarjetas con barra de progreso
+   ============================================================ */
+.presupuestos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.presupuesto-card {
+  background: #fff;
+  border: 1.5px solid var(--crema-700);
+  border-radius: var(--radio);
+  padding: 18px 20px;
+}
+
+.presupuesto-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+
+.presupuesto-card-cat {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.presupuesto-card-periodo {
+  font-size: 12px;
+  color: var(--tinta-60);
+  margin-bottom: 14px;
+}
+
+.presupuesto-montos {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.presupuesto-consumido { font-weight: 600; }
+.presupuesto-limite { color: var(--tinta-60); }
+
+/* Barra de progreso */
+.barra {
+  height: 9px;
+  background: var(--crema-700);
+  border-radius: 20px;
+  overflow: hidden;
+}
+.barra-relleno {
+  height: 100%;
+  border-radius: 20px;
+  transition: width 300ms ease;
+}
+.barra-relleno.ok { background: var(--verde-500); }
+.barra-relleno.alerta { background: var(--ambar); }
+.barra-relleno.excedido { background: var(--error); }
+
+.presupuesto-pct {
+  font-size: 12px;
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+.presupuesto-card-acciones {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--crema-700);
+}
+
+/* ============================================================
+   Metas de ahorro
+   ============================================================ */
+.metas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.meta-card {
+  background: #fff;
+  border: 1.5px solid var(--crema-700);
+  border-radius: var(--radio);
+  padding: 20px 22px;
+  position: relative;
+}
+
+.meta-card.cumplida {
+  border-color: var(--verde-500);
+  background: #f3f8f6;
+}
+
+.meta-card-nombre {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.meta-card-fecha {
+  font-size: 12px;
+  color: var(--tinta-60);
+  margin-bottom: 16px;
+}
+
+.meta-cumplida-badge {
+  display: inline-block;
+  background: var(--verde-500);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.03em;
+  margin-bottom: 12px;
+}
+
+.meta-montos {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+.meta-actual {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+}
+.meta-objetivo { font-size: 13px; color: var(--tinta-60); }
+
+.barra-relleno.meta { background: var(--ambar); }
+.barra-relleno.meta.completa { background: var(--verde-500); }
+
+.meta-pct {
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 8px;
+  color: var(--tinta-60);
+}
+
+.meta-card-acciones {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--crema-700);
+  flex-wrap: wrap;
+}
+
+/* ============================================================
+   Cotizaciones y cripto
+   ============================================================ */
+.coti-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 32px;
+}
+
+.coti-card {
+  background: #fff;
+  border: 1.5px solid var(--crema-700);
+  border-radius: var(--radio);
+  padding: 16px 18px;
+}
+
+.coti-nombre {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  text-transform: capitalize;
+}
+
+.coti-valores {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.coti-valor-label {
+  font-size: 11px;
+  color: var(--tinta-60);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+
+.coti-valor {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.cripto-precio {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.cripto-cambio {
+  font-size: 13px;
+  font-weight: 600;
+}
+.cripto-cambio.sube { color: var(--verde-500); }
+.cripto-cambio.baja { color: var(--error); }
+
+.coti-actualizado {
+  font-size: 11px;
+  color: var(--tinta-60);
+  margin-top: 10px;
+}
+
+/* ============================================================
+   Análisis IA
+   ============================================================ */
+.analisis-panel {
+  background: #fff;
+  border: 1.5px solid var(--crema-700);
+  border-radius: 16px;
+  padding: 28px 32px;
+  white-space: pre-wrap;
+  line-height: 1.7;
+  font-size: 15px;
+  color: var(--tinta);
+}
+
+.analisis-intro {
+  background: var(--verde-900);
+  color: var(--crema);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 20px;
+}
+.analisis-intro p {
+  font-size: 14px;
+  color: var(--verde-200);
+  margin-top: 6px;
+}

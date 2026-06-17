@@ -1,0 +1,118 @@
+/* ============================================================
+   Componentes compartidos: modal, botones, acciones
+   ============================================================ */
+
+/* --- Encabezado de página con botón de acción a la derecha --- */
+.header-con-accion {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 28px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* --- Botones extra (además de .btn-primario que ya existe) --- */
+.btn-secundario {
+  background: #fff;
+  border: 1.5px solid var(--crema-700);
+  color: var(--tinta);
+}
+.btn-secundario:hover:not(:disabled) { background: var(--crema); }
+
+.btn-auto { width: auto; }
+
+.btn-peligro {
+  background: transparent;
+  border: 1.5px solid var(--error);
+  color: var(--error);
+}
+.btn-peligro:hover:not(:disabled) { background: var(--error-bg); }
+
+.btn-chico {
+  font-size: 13px;
+  padding: 7px 12px;
+  width: auto;
+}
+
+/* --- Acciones dentro de una tarjeta de cuenta --- */
+.cuenta-card-acciones {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--crema-700);
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--ambar-700);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-family: var(--font-body);
+}
+.btn-link:hover { background: var(--crema); }
+.btn-link.peligro { color: var(--error); }
+
+/* --- Modal --- */
+.modal-fondo {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 48, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 100;
+}
+
+.modal {
+  background: var(--crema);
+  border-radius: 16px;
+  padding: 28px;
+  width: 100%;
+  max-width: 440px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--sombra);
+}
+
+.modal h2 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.modal-sub {
+  color: var(--tinta-60);
+  font-size: 14px;
+  margin-bottom: 22px;
+}
+
+.modal-acciones {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+/* --- Select estilizado igual que los inputs --- */
+.campo select {
+  font-family: var(--font-body);
+  font-size: 15px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--crema-700);
+  border-radius: var(--radio);
+  background: #fff;
+  color: var(--tinta);
+  cursor: pointer;
+}
+.campo select:focus {
+  outline: none;
+  border-color: var(--ambar);
+  box-shadow: 0 0 0 3px rgba(217, 138, 61, 0.18);
+}

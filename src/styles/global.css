@@ -1,0 +1,119 @@
+/* ============================================================
+   Sistema de diseño — Finanzas Personales
+   Paleta: verde profundo + crema cálido + acento ámbar.
+   No es el verde-billete chillón ni el dashboard azul corporativo:
+   busca sentirse calmo y confiable, como un cuaderno de cuentas prolijo.
+   ============================================================ */
+
+:root {
+  /* Color */
+  --verde-900: #11302a; /* fondo profundo, casi negro verdoso */
+  --verde-700: #1d4d42;
+  --verde-500: #2f7d6b; /* primario */
+  --verde-200: #a8d5c8;
+  --crema:     #f5f1e8; /* fondo claro cálido */
+  --crema-700: #e6dfce;
+  --ambar:     #d98a3d; /* acento: botones de acción, foco */
+  --ambar-700: #b96f29;
+  --tinta:     #1a1a17; /* texto principal */
+  --tinta-60:  #5a5a52; /* texto secundario */
+  --error:     #b3402e;
+  --error-bg:  #f7e2dd;
+
+  /* Tipografía */
+  --font-display: "Fraunces", Georgia, serif; /* títulos con carácter */
+  --font-body: "Inter", system-ui, -apple-system, sans-serif;
+
+  /* Espaciado y formas */
+  --radio: 10px;
+  --sombra: 0 4px 24px rgba(17, 48, 42, 0.12);
+  --transicion: 160ms ease;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root { height: 100%; }
+
+body {
+  font-family: var(--font-body);
+  color: var(--tinta);
+  background: var(--crema);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+
+/* Respeta a quien prefiere menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+/* --- Utilidades de formulario reutilizables --- */
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.campo label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tinta-60);
+  letter-spacing: 0.01em;
+}
+
+.campo input {
+  font-family: var(--font-body);
+  font-size: 15px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--crema-700);
+  border-radius: var(--radio);
+  background: #fff;
+  color: var(--tinta);
+  transition: border-color var(--transicion), box-shadow var(--transicion);
+}
+
+.campo input:focus {
+  outline: none;
+  border-color: var(--ambar);
+  box-shadow: 0 0 0 3px rgba(217, 138, 61, 0.18);
+}
+
+.campo input::placeholder { color: #b3aea0; }
+
+/* Botón primario */
+.btn {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  padding: 13px 20px;
+  border: none;
+  border-radius: var(--radio);
+  cursor: pointer;
+  transition: background var(--transicion), transform var(--transicion);
+}
+
+.btn-primario {
+  background: var(--ambar);
+  color: #fff;
+  width: 100%;
+}
+
+.btn-primario:hover:not(:disabled) { background: var(--ambar-700); }
+.btn-primario:active:not(:disabled) { transform: translateY(1px); }
+.btn-primario:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn:focus-visible {
+  outline: 3px solid var(--verde-500);
+  outline-offset: 2px;
+}
+
+/* Mensaje de error de formulario */
+.alerta-error {
+  background: var(--error-bg);
+  color: var(--error);
+  padding: 10px 14px;
+  border-radius: var(--radio);
+  font-size: 14px;
+  margin-bottom: 16px;
+}
