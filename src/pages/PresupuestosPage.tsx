@@ -3,6 +3,7 @@ import { useAsync } from "../hooks/useAsync";
 import { presupuestoApi, categoriaApi } from "../api";
 import { HttpError } from "../api/http";
 import { Modal } from "../components/Modal";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { formatearMoneda } from "../lib/format";
 import type { PresupuestoResponse, CategoriaResponse } from "../types";
 
@@ -106,6 +107,7 @@ function PresupuestoCard({
   onListo: () => void;
 }) {
   const [borrando, setBorrando] = useState(false);
+  const [confirmar, setConfirmar] = useState(false);
 
   // Porcentaje consumido (tope visual en 100% para la barra).
   const pct = p.montoLimite > 0 ? (p.montoConsumido / p.montoLimite) * 100 : 0;
@@ -116,7 +118,6 @@ function PresupuestoCard({
   const clase = pct > 100 ? "excedido" : pct >= 80 ? "alerta" : "ok";
 
   async function eliminar() {
-    if (!confirm("¿Eliminar este presupuesto?")) return;
     setBorrando(true);
     try {
       await presupuestoApi.eliminar(p.id);
@@ -158,17 +159,35 @@ function PresupuestoCard({
         }}
       >
         {pctTexto}% usado
-        {pct > 100 && " · ¡excedido!"}
+        {pct > 100 && " · ¡Presupuesto excedido!"}
       </div>
+
+      {pct > 100 && (
+        <div className="presupuesto-excedido-aviso">
+          Te pasaste {formatearMoneda(p.montoConsumido - p.montoLimite)} del límite.
+        </div>
+      )}
 
       <div className="presupuesto-card-acciones">
         <button className="btn-link" onClick={onEditar}>
           Editar
         </button>
-        <button className="btn-link peligro" onClick={eliminar} disabled={borrando}>
+        <button className="btn-link peligro" onClick={() => setConfirmar(true)} disabled={borrando}>
           {borrando ? "…" : "Eliminar"}
         </button>
       </div>
+
+      {confirmar && (
+        <ConfirmDialog
+          titulo="Eliminar presupuesto"
+          mensaje={`¿Eliminar el presupuesto de "${p.categoriaNombre}" de ${MESES[p.mes - 1]} ${p.anio}?`}
+          textoConfirmar="Eliminar"
+          peligro
+          procesando={borrando}
+          onConfirmar={eliminar}
+          onCancelar={() => setConfirmar(false)}
+        />
+      )}
     </div>
   );
 }

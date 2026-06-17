@@ -3,6 +3,7 @@ import { useAsync } from "../hooks/useAsync";
 import { categoriaApi } from "../api";
 import { HttpError } from "../api/http";
 import { Modal } from "../components/Modal";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import type { CategoriaResponse, TipoMovimiento } from "../types";
 
 export function CategoriasPage() {
@@ -133,26 +134,49 @@ function BotonEliminar({
   onListo: () => void;
 }) {
   const [borrando, setBorrando] = useState(false);
+  const [confirmar, setConfirmar] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function eliminar() {
-    if (!confirm(`¿Eliminar la categoría "${nombre}"?`)) return;
     setBorrando(true);
+    setError(null);
     try {
       await categoriaApi.eliminar(id);
       onListo();
     } catch (e) {
       // Ej: "No se puede eliminar una categoria por defecto del sistema"
-      // o "...tiene N movimientos asociados"
-      alert(e instanceof HttpError ? e.message : "No se pudo eliminar");
-    } finally {
+      setError(e instanceof HttpError ? e.message : "No se pudo eliminar");
       setBorrando(false);
     }
   }
 
   return (
-    <button className="btn-link peligro" onClick={eliminar} disabled={borrando}>
-      {borrando ? "…" : "Eliminar"}
-    </button>
+    <>
+      <button className="btn-link peligro" onClick={() => setConfirmar(true)} disabled={borrando}>
+        {borrando ? "…" : "Eliminar"}
+      </button>
+      {confirmar && !error && (
+        <ConfirmDialog
+          titulo="Eliminar categoría"
+          mensaje={`¿Eliminar la categoría "${nombre}"? Esta acción no se puede deshacer.`}
+          textoConfirmar="Eliminar"
+          peligro
+          procesando={borrando}
+          onConfirmar={eliminar}
+          onCancelar={() => setConfirmar(false)}
+        />
+      )}
+      {error && (
+        <ConfirmDialog
+          titulo="No se pudo eliminar"
+          mensaje={error}
+          textoConfirmar="Entendido"
+          textoCancelar="Cerrar"
+          onConfirmar={() => { setError(null); setConfirmar(false); }}
+          onCancelar={() => { setError(null); setConfirmar(false); }}
+        />
+      )}
+    </>
   );
 }
 

@@ -1,15 +1,34 @@
 import { useAsync } from "../hooks/useAsync";
 import { externoApi } from "../api";
-import { formatearMoneda } from "../lib/format";
 import type { CotizacionDTO, CriptoDTO } from "../types";
 
-// Formatea un valor en USD (las cripto vienen en dólares).
-function formatearUsd(n: number): string {
+// Formatea un valor en USD de forma robusta (puede venir como number o string).
+function formatearUsd(n: number | string | null | undefined): string {
+  const num = typeof n === "string" ? parseFloat(n) : n;
+  if (num == null || Number.isNaN(num)) return "—";
+  // Cripto de bajo valor (ej: shiba) necesita más decimales.
+  const maxDec = num < 1 ? 6 : 2;
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
+    maximumFractionDigits: maxDec,
+  }).format(num);
+}
+
+// Formatea pesos de forma robusta.
+function formatearPesos(n: number | string | null | undefined): string {
+  const num = typeof n === "string" ? parseFloat(n) : n;
+  if (num == null || Number.isNaN(num)) return "—";
+  return new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "ARS",
     maximumFractionDigits: 2,
-  }).format(n);
+  }).format(num);
+}
+
+function aNumero(n: number | string | null | undefined): number {
+  const num = typeof n === "string" ? parseFloat(n) : n;
+  return num == null || Number.isNaN(num) ? 0 : num;
 }
 
 export function CotizacionesPage() {
@@ -24,25 +43,26 @@ export function CotizacionesPage() {
         <p>Valores del dólar, divisas y criptomonedas en tiempo real.</p>
       </header>
 
-      {/* DÓLAR */}
       <h2 className="seccion-titulo">Dólar</h2>
       <BloqueCotizaciones estado={dolares} />
 
-      {/* DIVISAS */}
       <h2 className="seccion-titulo">Otras divisas</h2>
       <BloqueCotizaciones estado={divisas} />
 
-      {/* CRIPTO */}
       <h2 className="seccion-titulo">Criptomonedas</h2>
       {criptos.loading && <div className="estado">Cargando criptomonedas…</div>}
       {criptos.error && <div className="estado estado-error">{criptos.error}</div>}
+      {criptos.data && criptos.data.length === 0 && (
+        <div className="estado">No hay datos de cripto disponibles ahora.</div>
+      )}
       {criptos.data && criptos.data.length > 0 && (
         <div className="coti-grid">
           {criptos.data.map((c: CriptoDTO) => {
-            const sube = c.cambio24h >= 0;
+            const cambio = aNumero(c.cambio24h);
+            const sube = cambio >= 0;
             return (
               <div key={c.id} className="coti-card">
-                <div className="coti-nombre">
+                <div className="coti-nombre" title={c.name}>
                   {c.name}{" "}
                   <span style={{ color: "var(--tinta-60)", fontWeight: 400 }}>
                     ({c.symbol?.toUpperCase()})
@@ -50,7 +70,7 @@ export function CotizacionesPage() {
                 </div>
                 <div className="cripto-precio">{formatearUsd(c.precioUsd)}</div>
                 <div className={sube ? "cripto-cambio sube" : "cripto-cambio baja"}>
-                  {sube ? "▲" : "▼"} {Math.abs(c.cambio24h).toFixed(2)}% (24h)
+                  {sube ? "▲" : "▼"} {Math.abs(cambio).toFixed(2)}% (24h)
                 </div>
               </div>
             );
@@ -61,7 +81,6 @@ export function CotizacionesPage() {
   );
 }
 
-// Bloque reutilizable para dólar y divisas (misma estructura).
 function BloqueCotizaciones({
   estado,
 }: {
@@ -76,15 +95,17 @@ function BloqueCotizaciones({
     <div className="coti-grid">
       {estado.data.map((c, i) => (
         <div key={`${c.casa}-${i}`} className="coti-card">
-          <div className="coti-nombre">{c.nombre || c.casa}</div>
+          <div className="coti-nombre" title={c.nombre || c.casa}>
+            {c.nombre || c.casa}
+          </div>
           <div className="coti-valores">
-            <div>
+            <div className="coti-valor-col">
               <div className="coti-valor-label">Compra</div>
-              <div className="coti-valor">{formatearMoneda(c.compra)}</div>
+              <div className="coti-valor">{formatearPesos(c.compra)}</div>
             </div>
-            <div style={{ textAlign: "right" }}>
+            <div className="coti-valor-col" style={{ textAlign: "right" }}>
               <div className="coti-valor-label">Venta</div>
-              <div className="coti-valor">{formatearMoneda(c.venta)}</div>
+              <div className="coti-valor">{formatearPesos(c.venta)}</div>
             </div>
           </div>
         </div>

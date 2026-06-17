@@ -2,8 +2,13 @@ import { useState } from "react";
 import { externoApi } from "../api";
 import { HttpError } from "../api/http";
 
+// Cache a nivel de módulo: sobrevive a desmontar/montar la página, así el
+// análisis NO se pierde al cambiar de pestaña y volver. Se borra al recargar
+// la app o cerrar sesión (es solo para la sesión actual).
+let analisisCache: string | null = null;
+
 export function AnalisisPage() {
-  const [analisis, setAnalisis] = useState<string | null>(null);
+  const [analisis, setAnalisis] = useState<string | null>(analisisCache);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -13,13 +18,15 @@ export function AnalisisPage() {
     try {
       const res = await externoApi.analisis();
       setAnalisis(res.analisis);
+      analisisCache = res.analisis; // guardamos para cuando se vuelva a la pestaña
     } catch (e) {
-      // Ej: "El servicio de análisis no está configurado (falta GEMINI_API_KEY)"
       setError(e instanceof HttpError ? e.message : "No se pudo generar el análisis");
     } finally {
       setCargando(false);
     }
   }
+
+  const yaHayAnalisis = analisis !== null;
 
   return (
     <>
@@ -42,8 +49,19 @@ export function AnalisisPage() {
           disabled={cargando}
           style={{ marginTop: 16 }}
         >
-          {cargando ? "Analizando tus finanzas…" : analisis ? "Volver a analizar" : "Generar análisis"}
+          {cargando
+            ? "Analizando tus finanzas…"
+            : yaHayAnalisis
+            ? "Actualizar análisis"
+            : "Generar análisis"}
         </button>
+        {yaHayAnalisis && !cargando && (
+          <p style={{ marginTop: 10, fontSize: 13 }}>
+            Ya tenés un análisis generado abajo. Si tu situación cambió (nuevos
+            movimientos, cuentas o presupuestos), tocá "Actualizar análisis" para
+            generar uno nuevo con los datos más recientes.
+          </p>
+        )}
       </div>
 
       {error && <div className="estado estado-error">{error}</div>}

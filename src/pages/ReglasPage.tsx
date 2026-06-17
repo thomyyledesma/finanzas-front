@@ -3,6 +3,7 @@ import { useAsync } from "../hooks/useAsync";
 import { reglaApi, cuentaApi, categoriaApi } from "../api";
 import { HttpError } from "../api/http";
 import { Modal } from "../components/Modal";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { formatearMoneda, formatearFecha } from "../lib/format";
 import type {
   ReglaRecurrenteResponse,
@@ -15,7 +16,6 @@ function hoyIso(): string {
   return new Date().toISOString().split("T")[0];
 }
 
-// Traduce la frecuencia en días a un texto legible.
 function textoFrecuencia(dias: number): string {
   if (dias === 1) return "Todos los días";
   if (dias === 7) return "Cada semana";
@@ -30,13 +30,13 @@ export function ReglasPage() {
   const categorias = useAsync(() => categoriaApi.listar());
 
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [aDesactivar, setADesactivar] = useState<ReglaRecurrenteResponse | null>(null);
 
   function recargar() {
     reglas.reload();
     setModalAbierto(false);
   }
 
-  // Las activas primero.
   const lista = (reglas.data ?? []).slice().sort((a, b) => {
     if (a.activa !== b.activa) return a.activa ? -1 : 1;
     return a.proximaEjecucion.localeCompare(b.proximaEjecucion);
@@ -77,12 +77,12 @@ export function ReglasPage() {
               <th>Próxima vez</th>
               <th>Cuenta</th>
               <th style={{ textAlign: "right" }}>Monto</th>
-              <th style={{ textAlign: "right" }}>Estado</th>
+              <th style={{ textAlign: "right" }}>Acción</th>
             </tr>
           </thead>
           <tbody>
             {lista.map((r) => (
-              <tr key={r.id} style={{ opacity: r.activa ? 1 : 0.5 }}>
+              <tr key={r.id} style={{ opacity: r.activa ? 1 : 0.55 }}>
                 <td style={{ fontWeight: 600 }}>{r.descripcion}</td>
                 <td>
                   <span
@@ -106,9 +106,11 @@ export function ReglasPage() {
                 </td>
                 <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
                   {r.activa ? (
-                    <BotonDesactivar id={r.id} onListo={recargar} />
+                    <button className="btn-link peligro" onClick={() => setADesactivar(r)}>
+                      Desactivar
+                    </button>
                   ) : (
-                    <span style={{ fontSize: 13, color: "var(--tinta-60)" }}>Inactiva</span>
+                    <BotonReactivar id={r.id} onListo={recargar} />
                   )}
                 </td>
               </tr>
@@ -125,41 +127,95 @@ export function ReglasPage() {
           onGuardado={recargar}
         />
       )}
+
+      {aDesactivar && (
+        <DialogoDesactivar
+          regla={aDesactivar}
+          onCerrar={() => setADesactivar(null)}
+          onListo={() => {
+            setADesactivar(null);
+            recargar();
+          }}
+        />
+      )}
     </>
   );
 }
 
-// ============================================================
-// Botón desactivar (el backend no borra, desactiva)
-// ============================================================
-function BotonDesactivar({ id, onListo }: { id: number; onListo: () => void }) {
+// Diálogo de desactivación (confirm lindo)
+function DialogoDesactivar({
+  regla,
+  onCerrar,
+  onListo,
+}: {
+  regla: ReglaRecurrenteResponse;
+  onCerrar: () => void;
+  onListo: () => void;
+}) {
   const [procesando, setProcesando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function desactivar() {
-    if (!confirm("¿Desactivar esta regla? Dejará de generar movimientos automáticos.")) {
-      return;
-    }
     setProcesando(true);
+    setError(null);
     try {
-      await reglaApi.desactivar(id);
+      await reglaApi.desactivar(regla.id);
       onListo();
     } catch (e) {
-      alert(e instanceof HttpError ? e.message : "No se pudo desactivar");
+      setError(e instanceof HttpError ? e.message : "No se pudo desactivar");
+      setProcesando(false);
+    }
+  }
+
+  if (error) {
+    return (
+      <ConfirmDialog
+        titulo="No se pudo desactivar"
+        mensaje={error}
+        textoConfirmar="Entendido"
+        textoCancelar="Cerrar"
+        onConfirmar={onCerrar}
+        onCancelar={onCerrar}
+      />
+    );
+  }
+
+  return (
+    <ConfirmDialog
+      titulo="Desactivar regla"
+      mensaje={`¿Desactivar "${regla.descripcion}"? Dejará de generar movimientos automáticos. Podés reactivarla más adelante.`}
+      textoConfirmar="Desactivar"
+      peligro
+      procesando={procesando}
+      onConfirmar={desactivar}
+      onCancelar={onCerrar}
+    />
+  );
+}
+
+// Botón reactivar (vuelve a activar una regla desactivada)
+function BotonReactivar({ id, onListo }: { id: number; onListo: () => void }) {
+  const [procesando, setProcesando] = useState(false);
+
+  async function reactivar() {
+    setProcesando(true);
+    try {
+      await reglaApi.reactivar(id);
+      onListo();
+    } catch (e) {
+      alert(e instanceof HttpError ? e.message : "No se pudo reactivar");
     } finally {
       setProcesando(false);
     }
   }
 
   return (
-    <button className="btn-link peligro" onClick={desactivar} disabled={procesando}>
-      {procesando ? "…" : "Desactivar"}
+    <button className="btn-link" onClick={reactivar} disabled={procesando}>
+      {procesando ? "…" : "Reactivar"}
     </button>
   );
 }
 
-// ============================================================
-// Modal crear regla
-// ============================================================
 function ModalRegla({
   cuentas,
   categorias,
@@ -178,11 +234,9 @@ function ModalRegla({
   const [categoriaId, setCategoriaId] = useState<number>(0);
   const [frecuenciaDias, setFrecuenciaDias] = useState<number>(30);
   const [proximaEjecucion, setProximaEjecucion] = useState(hoyIso());
-  const [esFamiliar, setEsFamiliar] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
-  // Categorías filtradas por tipo, igual que en movimientos.
   const categoriasFiltradas = categorias.filter((c) => c.tipo === tipo);
 
   useEffect(() => {
@@ -207,12 +261,13 @@ function ModalRegla({
         tipo,
         descripcion: descripcion.trim(),
         monto: Number(monto),
-        esFamiliar,
+        esFamiliar: false, // el campo sigue existiendo en el back; lo mandamos fijo
         frecuenciaDias,
         proximaEjecucion,
       });
       onGuardado();
     } catch (e) {
+      // Ej: "Ya tenés una regla activa igual..."
       setError(e instanceof HttpError ? e.message : "No se pudo crear la regla");
     } finally {
       setEnviando(false);
@@ -313,24 +368,11 @@ function ModalRegla({
               id="proxima"
               type="date"
               value={proximaEjecucion}
+              min={hoyIso()}
               onChange={(e) => setProximaEjecucion(e.target.value)}
               required
             />
           </div>
-        </div>
-
-        <div className="campo">
-          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-            <input
-              type="checkbox"
-              checked={esFamiliar}
-              onChange={(e) => setEsFamiliar(e.target.checked)}
-              style={{ width: "auto" }}
-            />
-            <span style={{ fontWeight: 400, textTransform: "none" }}>
-              Es un gasto/ingreso familiar
-            </span>
-          </label>
         </div>
 
         <div className="modal-acciones">

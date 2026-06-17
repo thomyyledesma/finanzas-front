@@ -1,8 +1,9 @@
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, useEffect, useMemo, type FormEvent } from "react";
 import { useAsync } from "../hooks/useAsync";
 import { movimientoApi, cuentaApi, categoriaApi } from "../api";
 import { HttpError } from "../api/http";
 import { Modal } from "../components/Modal";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { formatearMoneda, formatearFecha } from "../lib/format";
 import type {
   MovimientoResponse,
@@ -11,45 +12,61 @@ import type {
   TipoMovimiento,
 } from "../types";
 
-// Fecha de hoy en formato "YYYY-MM-DD" para el input date.
 function hoyIso(): string {
   return new Date().toISOString().split("T")[0];
 }
 
 export function MovimientosPage() {
   const movimientos = useAsync(() => movimientoApi.listar());
-  // Cargamos cuentas y categorías una vez para reusar en el formulario.
   const cuentas = useAsync(() => cuentaApi.listar());
   const categorias = useAsync(() => categoriaApi.listar());
 
   const [modalAbierto, setModalAbierto] = useState(false);
   const [editar, setEditar] = useState<MovimientoResponse | null>(null);
+  const [aEliminar, setAEliminar] = useState<MovimientoResponse | null>(null);
+
+  const [desde, setDesde] = useState("");
+  const [hasta, setHasta] = useState("");
 
   function abrirNuevo() {
     setEditar(null);
     setModalAbierto(true);
   }
-
   function abrirEditar(m: MovimientoResponse) {
     setEditar(m);
     setModalAbierto(true);
   }
-
   function cerrar() {
     setModalAbierto(false);
     setEditar(null);
   }
-
   function recargarTodo() {
     movimientos.reload();
-    cuentas.reload(); // los saldos cambian al registrar un movimiento
+    cuentas.reload();
     cerrar();
   }
 
-  // Ordenados por fecha, más nuevos primero.
-  const lista = (movimientos.data ?? [])
-    .slice()
-    .sort((a, b) => b.fecha.localeCompare(a.fecha));
+  const lista = useMemo(() => {
+    return (movimientos.data ?? [])
+      .filter((m) => {
+        if (desde && m.fecha < desde) return false;
+        if (hasta && m.fecha > hasta) return false;
+        return true;
+      })
+      .slice()
+      .sort((a, b) => b.fecha.localeCompare(a.fecha));
+  }, [movimientos.data, desde, hasta]);
+
+  const grupos = useMemo(() => {
+    const mapa = new Map<string, MovimientoResponse[]>();
+    for (const m of lista) {
+      if (!mapa.has(m.fecha)) mapa.set(m.fecha, []);
+      mapa.get(m.fecha)!.push(m);
+    }
+    return Array.from(mapa.entries());
+  }, [lista]);
+
+  const hayFiltro = desde !== "" || hasta !== "";
 
   return (
     <>
@@ -67,57 +84,79 @@ export function MovimientosPage() {
         </button>
       </header>
 
+      <div className="filtro-fechas">
+        <div className="filtro-campo">
+          <label htmlFor="desde">Desde</label>
+          <input id="desde" type="date" value={desde} max={hoyIso()} onChange={(e) => setDesde(e.target.value)} />
+        </div>
+        <div className="filtro-campo">
+          <label htmlFor="hasta">Hasta</label>
+          <input id="hasta" type="date" value={hasta} max={hoyIso()} onChange={(e) => setHasta(e.target.value)} />
+        </div>
+        {hayFiltro && (
+          <button
+            className="btn btn-secundario btn-chico"
+            onClick={() => {
+              setDesde("");
+              setHasta("");
+            }}
+          >
+            Limpiar filtro
+          </button>
+        )}
+      </div>
+
       {movimientos.loading && <div className="estado">Cargando movimientos…</div>}
       {movimientos.error && <div className="estado estado-error">{movimientos.error}</div>}
 
       {movimientos.data && lista.length === 0 && (
         <div className="estado">
-          Todavía no registraste movimientos. Tocá "Registrar movimiento" para empezar.
+          {hayFiltro
+            ? "No hay movimientos en ese rango de fechas."
+            : 'Todavía no registraste movimientos. Tocá "Registrar movimiento" para empezar.'}
         </div>
       )}
 
-      {lista.length > 0 && (
-        <table className="movimientos-tabla">
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Descripción</th>
-              <th>Categoría</th>
-              <th>Cuenta</th>
-              <th style={{ textAlign: "right" }}>Monto</th>
-              <th style={{ textAlign: "right" }}>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {lista.map((m) => (
-              <tr key={m.id}>
-                <td>{formatearFecha(m.fecha)}</td>
-                <td>{m.descripcion || "—"}</td>
-                <td>
-                  {m.categoriaNombre ? (
-                    <span className="badge-cat">{m.categoriaNombre}</span>
-                  ) : (
-                    "—"
-                  )}
-                </td>
-                <td>{m.cuentaNombre}</td>
-                <td
-                  style={{ textAlign: "right" }}
-                  className={m.tipo === "INGRESO" ? "monto-ingreso" : "monto-egreso"}
-                >
-                  {m.tipo === "INGRESO" ? "+" : "−"}
-                  {formatearMoneda(m.monto)}
-                </td>
-                <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
-                  <button className="btn-link" onClick={() => abrirEditar(m)}>
-                    Editar
-                  </button>
-                  <BotonEliminar id={m.id} onListo={recargarTodo} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {grupos.length > 0 && (
+        <div className="mov-grupos">
+          {grupos.map(([fecha, items]) => (
+            <div key={fecha} className="mov-grupo">
+              <div className="mov-grupo-fecha">{formatearFecha(fecha)}</div>
+              <table className="movimientos-tabla">
+                <tbody>
+                  {items.map((m) => (
+                    <tr key={m.id}>
+                      <td>{m.descripcion || "—"}</td>
+                      <td>
+                        {m.categoriaNombre ? (
+                          <span className="badge-cat">{m.categoriaNombre}</span>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                      <td>{m.cuentaNombre}</td>
+                      <td
+                        style={{ textAlign: "right" }}
+                        className={m.tipo === "INGRESO" ? "monto-ingreso" : "monto-egreso"}
+                      >
+                        {m.tipo === "INGRESO" ? "+" : "−"}
+                        {formatearMoneda(m.monto)}
+                      </td>
+                      <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                        <button className="btn-link" onClick={() => abrirEditar(m)}>
+                          Editar
+                        </button>
+                        <button className="btn-link peligro" onClick={() => setAEliminar(m)}>
+                          Eliminar
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
+        </div>
       )}
 
       {modalAbierto && (
@@ -129,43 +168,73 @@ export function MovimientosPage() {
           onGuardado={recargarTodo}
         />
       )}
+
+      {aEliminar && (
+        <DialogoEliminar
+          movimiento={aEliminar}
+          onCerrar={() => setAEliminar(null)}
+          onListo={() => {
+            setAEliminar(null);
+            recargarTodo();
+          }}
+        />
+      )}
     </>
   );
 }
 
-// ============================================================
-// Botón eliminar con confirmación
-// ============================================================
-function BotonEliminar({ id, onListo }: { id: number; onListo: () => void }) {
+function DialogoEliminar({
+  movimiento,
+  onCerrar,
+  onListo,
+}: {
+  movimiento: MovimientoResponse;
+  onCerrar: () => void;
+  onListo: () => void;
+}) {
   const [borrando, setBorrando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function eliminar() {
-    if (!confirm("¿Eliminar este movimiento? El saldo de la cuenta se va a ajustar.")) {
-      return;
-    }
     setBorrando(true);
+    setError(null);
     try {
-      await movimientoApi.eliminar(id);
+      await movimientoApi.eliminar(movimiento.id);
       onListo();
     } catch (e) {
-      alert(e instanceof HttpError ? e.message : "No se pudo eliminar");
-    } finally {
+      setError(e instanceof HttpError ? e.message : "No se pudo eliminar");
       setBorrando(false);
     }
   }
 
+  if (error) {
+    return (
+      <ConfirmDialog
+        titulo="No se pudo eliminar"
+        mensaje={error}
+        textoConfirmar="Entendido"
+        textoCancelar="Cerrar"
+        onConfirmar={onCerrar}
+        onCancelar={onCerrar}
+      />
+    );
+  }
+
   return (
-    <button className="btn-link peligro" onClick={eliminar} disabled={borrando}>
-      {borrando ? "…" : "Eliminar"}
-    </button>
+    <ConfirmDialog
+      titulo="Eliminar movimiento"
+      mensaje={`¿Seguro que querés eliminar este movimiento de ${formatearMoneda(
+        movimiento.monto
+      )}? El saldo de la cuenta se va a ajustar. Esta acción no se puede deshacer.`}
+      textoConfirmar="Eliminar"
+      peligro
+      procesando={borrando}
+      onConfirmar={eliminar}
+      onCancelar={onCerrar}
+    />
   );
 }
 
-// ============================================================
-// Modal de registrar / editar movimiento
-// Sigue el caso de uso del documento: tipo, monto, cuenta,
-// categoría, fecha y descripción opcional.
-// ============================================================
 function ModalMovimiento({
   movimiento,
   cuentas,
@@ -192,12 +261,8 @@ function ModalMovimiento({
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
-  // Las categorías se filtran por el tipo elegido: si es ingreso, solo
-  // categorías de ingreso (el backend valida que coincidan).
   const categoriasFiltradas = categorias.filter((c) => c.tipo === tipo);
 
-  // Cuando cambia el tipo, si la categoría elegida ya no aplica, la reseteamos
-  // a la primera disponible del nuevo tipo.
   useEffect(() => {
     const sigueValida = categoriasFiltradas.some((c) => c.id === categoriaId);
     if (!sigueValida) {
@@ -216,6 +281,17 @@ function ModalMovimiento({
     }
     if (!categoriaId) {
       setError("Elegí una categoría");
+      return;
+    }
+
+    const hoy = hoyIso();
+    if (fecha > hoy) {
+      setError("La fecha no puede ser futura.");
+      return;
+    }
+    const anio = Number(fecha.split("-")[0]);
+    if (anio < 2000 || anio > new Date().getFullYear()) {
+      setError(`El año debe estar entre 2000 y ${new Date().getFullYear()}.`);
       return;
     }
 
@@ -258,11 +334,7 @@ function ModalMovimiento({
 
         <div className="campo">
           <label htmlFor="tipo">Tipo</label>
-          <select
-            id="tipo"
-            value={tipo}
-            onChange={(e) => setTipo(e.target.value as TipoMovimiento)}
-          >
+          <select id="tipo" value={tipo} onChange={(e) => setTipo(e.target.value as TipoMovimiento)}>
             <option value="EGRESO">Egreso (sale plata)</option>
             <option value="INGRESO">Ingreso (entra plata)</option>
           </select>
@@ -289,11 +361,7 @@ function ModalMovimiento({
               No tenés cuentas activas. Creá una primero.
             </p>
           ) : (
-            <select
-              id="cuenta"
-              value={cuentaId}
-              onChange={(e) => setCuentaId(Number(e.target.value))}
-            >
+            <select id="cuenta" value={cuentaId} onChange={(e) => setCuentaId(Number(e.target.value))}>
               {cuentasActivas.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.nombre} ({formatearMoneda(c.saldo)})
@@ -330,6 +398,8 @@ function ModalMovimiento({
             id="fecha"
             type="date"
             value={fecha}
+            max={hoyIso()}
+            min="2000-01-01"
             onChange={(e) => setFecha(e.target.value)}
             required
           />

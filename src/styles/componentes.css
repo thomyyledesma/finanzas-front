@@ -116,3 +116,12 @@
   border-color: var(--ambar);
   box-shadow: 0 0 0 3px rgba(217, 138, 61, 0.18);
 }
+
+/* Botón de peligro relleno (para confirmar eliminaciones) */
+.btn-peligro-lleno {
+  background: var(--error);
+  color: #fff;
+  width: 100%;
+}
+.btn-peligro-lleno:hover:not(:disabled) { background: #962f20; }
+.btn-peligro-lleno:disabled { opacity: 0.6; cursor: not-allowed; }

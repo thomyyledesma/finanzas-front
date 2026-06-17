@@ -3,6 +3,7 @@ import { useAsync } from "../hooks/useAsync";
 import { metaApi, cuentaApi } from "../api";
 import { HttpError } from "../api/http";
 import { Modal } from "../components/Modal";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { formatearMoneda, formatearFecha } from "../lib/format";
 import type { MetaAhorroResponse, CuentaResponse } from "../types";
 
@@ -123,10 +124,10 @@ function MetaCard({
   onListo: () => void;
 }) {
   const [borrando, setBorrando] = useState(false);
+  const [confirmar, setConfirmar] = useState(false);
   const pct = Math.min(m.porcentajeProgreso, 100);
 
   async function eliminar() {
-    if (!confirm(`¿Eliminar la meta "${m.nombre}"?`)) return;
     setBorrando(true);
     try {
       await metaApi.eliminar(m.id);
@@ -170,10 +171,22 @@ function MetaCard({
         <button className="btn-link" onClick={onEditar}>
           Editar
         </button>
-        <button className="btn-link peligro" onClick={eliminar} disabled={borrando}>
+        <button className="btn-link peligro" onClick={() => setConfirmar(true)} disabled={borrando}>
           {borrando ? "…" : "Eliminar"}
         </button>
       </div>
+
+      {confirmar && (
+        <ConfirmDialog
+          titulo="Eliminar meta"
+          mensaje={`¿Eliminar la meta "${m.nombre}"? Lo que tengas ahorrado en ella no vuelve solo a tus cuentas.`}
+          textoConfirmar="Eliminar"
+          peligro
+          procesando={borrando}
+          onConfirmar={eliminar}
+          onCancelar={() => setConfirmar(false)}
+        />
+      )}
     </div>
   );
 }
@@ -386,6 +399,12 @@ function ModalMovimientoMeta({
           {!esDeposito && (
             <p style={{ fontSize: 12, color: "var(--tinta-60)", marginTop: 4 }}>
               Disponible en la meta: {formatearMoneda(meta.montoActual)}
+            </p>
+          )}
+          {esDeposito && (
+            <p style={{ fontSize: 12, color: "var(--tinta-60)", marginTop: 4 }}>
+              Para completar la meta falta:{" "}
+              {formatearMoneda(Math.max(meta.montoObjetivo - meta.montoActual, 0))}
             </p>
           )}
         </div>

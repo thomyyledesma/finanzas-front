@@ -440,12 +440,20 @@
   font-weight: 600;
   margin-bottom: 12px;
   text-transform: capitalize;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .coti-valores {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
+}
+
+.coti-valor-col {
+  min-width: 0;
+  flex: 1;
 }
 
 .coti-valor-label {
@@ -458,14 +466,20 @@
 
 .coti-valor {
   font-family: var(--font-display);
-  font-size: 19px;
+  font-size: 16px;
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cripto-precio {
   font-family: var(--font-display);
-  font-size: 19px;
+  font-size: 17px;
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cripto-cambio {
@@ -506,4 +520,67 @@
   font-size: 14px;
   color: var(--verde-200);
   margin-top: 6px;
+}
+
+/* ============================================================
+   Movimientos: filtro de fechas y agrupación por día
+   ============================================================ */
+.filtro-fechas {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.filtro-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.filtro-campo label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tinta-60);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.filtro-campo input {
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 9px 12px;
+  border: 1.5px solid var(--crema-700);
+  border-radius: var(--radio);
+  background: #fff;
+  color: var(--tinta);
+}
+.filtro-campo input:focus {
+  outline: none;
+  border-color: var(--ambar);
+  box-shadow: 0 0 0 3px rgba(217, 138, 61, 0.18);
+}
+
+.mov-grupos {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.mov-grupo-fecha {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tinta-60);
+  text-transform: capitalize;
+  margin-bottom: 8px;
+  padding-left: 2px;
+}
+
+.presupuesto-excedido-aviso {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--error);
+  background: var(--error-bg);
+  padding: 6px 10px;
+  border-radius: 8px;
 }
