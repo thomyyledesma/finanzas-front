@@ -10,6 +10,9 @@ interface AuthContextValue {
   login: (data: LoginRequest) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => void;
+  // Refresca el usuario en memoria (ej: tras editar el perfil) para que la UI
+  // muestre el nombre nuevo sin recargar la página.
+  setUsuarioActual: (u: UsuarioResponse) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -55,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ usuario, isAuthenticated: !!usuario, loading, login, register, logout }}
+      value={{ usuario, isAuthenticated: !!usuario, loading, login, register, logout, setUsuarioActual: setUsuario }}
     >
       {children}
     </AuthContext.Provider>

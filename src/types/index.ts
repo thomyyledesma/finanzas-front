@@ -188,9 +188,14 @@ export interface CriptoDTO {
   id: string;
   symbol: string;
   name: string;
-  precioUsd: number;
-  cambio24h: number;
-  capitalizacion: number;
+  // El backend mapea estos nombres, pero por robustez aceptamos también los
+  // nombres originales de CoinGecko por si el mapeo no se aplicó.
+  precioUsd?: number;
+  cambio24h?: number;
+  capitalizacion?: number;
+  current_price?: number;
+  price_change_percentage_24h?: number;
+  market_cap?: number;
 }
 
 export interface AnalisisResponse {

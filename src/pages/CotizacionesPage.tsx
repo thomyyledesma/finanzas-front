@@ -61,7 +61,10 @@ export function CotizacionesPage() {
       {criptos.data && criptos.data.length > 0 && (
         <div className="coti-grid">
           {criptos.data.map((c: CriptoDTO) => {
-            const cambio = aNumero(c.cambio24h);
+            // Tomamos el valor desde el nombre mapeado (precioUsd) o, si no vino,
+            // desde el nombre original de CoinGecko (current_price). Igual con el cambio.
+            const precio = c.precioUsd ?? c.current_price;
+            const cambio = aNumero(c.cambio24h ?? c.price_change_percentage_24h);
             const sube = cambio >= 0;
             return (
               <div key={c.id} className="coti-card">
@@ -71,7 +74,7 @@ export function CotizacionesPage() {
                     ({c.symbol?.toUpperCase()})
                   </span>
                 </div>
-                <div className="cripto-precio">{formatearUsd(c.precioUsd)}</div>
+                <div className="cripto-precio">{formatearUsd(precio)}</div>
                 <div className={sube ? "cripto-cambio sube" : "cripto-cambio baja"}>
                   {sube ? "▲" : "▼"} {Math.abs(cambio).toFixed(2)}% (24h)
                 </div>

@@ -47,8 +47,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="sidebar-user">
-          <div className="sidebar-user-nombre">{usuario?.nombre}</div>
-          <div className="sidebar-user-email">{usuario?.email}</div>
+          {/* Tocar el nombre/email lleva a la página de perfil */}
+          <button
+            className="sidebar-user-info"
+            onClick={() => navigate("/perfil")}
+            title="Editar perfil"
+          >
+            <div className="sidebar-user-nombre">{usuario?.nombre}</div>
+            <div className="sidebar-user-email">{usuario?.email}</div>
+          </button>
           <button className="btn-salir" onClick={handleSalir}>
             Cerrar sesión
           </button>

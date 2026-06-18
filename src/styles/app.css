@@ -602,3 +602,61 @@
   font-weight: 400;
   color: var(--tinta-60);
 }
+
+/* ============================================================
+   Perfil
+   ============================================================ */
+.perfil-panel {
+  background: #fff;
+  border: 1.5px solid var(--crema-700);
+  border-radius: 16px;
+  padding: 28px 32px;
+  max-width: 480px;
+}
+
+.perfil-separador {
+  display: flex;
+  align-items: center;
+  margin: 24px 0 18px;
+  color: var(--tinta-60);
+  font-size: 13px;
+  font-weight: 600;
+}
+.perfil-separador::before,
+.perfil-separador::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--crema-700);
+}
+.perfil-separador span { padding: 0 12px; }
+
+.campo input:disabled {
+  background: var(--crema);
+  color: var(--tinta-60);
+  cursor: not-allowed;
+}
+
+.alerta-exito {
+  background: #d6ebe3;
+  color: var(--verde-700);
+  padding: 10px 14px;
+  border-radius: var(--radio);
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+/* Botón de usuario en la barra lateral (clickeable, lleva a perfil) */
+.sidebar-user-info {
+  background: transparent;
+  border: none;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  padding: 6px 8px;
+  margin: -6px -8px 12px;
+  border-radius: var(--radio);
+  transition: background var(--transicion);
+  font-family: var(--font-body);
+}
+.sidebar-user-info:hover { background: var(--verde-700); }

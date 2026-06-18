@@ -13,6 +13,7 @@ import { MetasPage } from "./pages/MetasPage";
 import { ReglasPage } from "./pages/ReglasPage";
 import { CotizacionesPage } from "./pages/CotizacionesPage";
 import { AnalisisPage } from "./pages/AnalisisPage";
+import { PerfilPage } from "./pages/PerfilPage";
 
 // Envuelve una página con el layout + la protección de ruta.
 function Privada({ children }: { children: React.ReactNode }) {
@@ -42,6 +43,7 @@ export default function App() {
           <Route path="/reglas" element={<Privada><ReglasPage /></Privada>} />
           <Route path="/cotizaciones" element={<Privada><CotizacionesPage /></Privada>} />
           <Route path="/analisis" element={<Privada><AnalisisPage /></Privada>} />
+          <Route path="/perfil" element={<Privada><PerfilPage /></Privada>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

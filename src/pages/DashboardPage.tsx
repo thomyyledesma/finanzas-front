@@ -17,7 +17,13 @@ export function DashboardPage() {
   // Últimos 8 movimientos, ordenados por fecha descendente.
   const ultimos: MovimientoResponse[] = (movimientos.data ?? [])
     .slice()
-    .sort((a, b) => b.fecha.localeCompare(a.fecha))
+    .sort((a, b) => {
+      // Más reciente primero. Dentro del mismo día desempatamos por id
+      // (id más alto = se creó después), igual que en la página de Movimientos.
+      const porFecha = b.fecha.localeCompare(a.fecha);
+      if (porFecha !== 0) return porFecha;
+      return b.id - a.id;
+    })
     .slice(0, 8);
 
   return (
