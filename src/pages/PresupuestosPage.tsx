@@ -108,6 +108,7 @@ function PresupuestoCard({
 }) {
   const [borrando, setBorrando] = useState(false);
   const [confirmar, setConfirmar] = useState(false);
+  const [errorEliminar, setErrorEliminar] = useState<string | null>(null);
 
   // Porcentaje consumido (tope visual en 100% para la barra).
   const pct = p.montoLimite > 0 ? (p.montoConsumido / p.montoLimite) * 100 : 0;
@@ -119,12 +120,12 @@ function PresupuestoCard({
 
   async function eliminar() {
     setBorrando(true);
+    setErrorEliminar(null);
     try {
       await presupuestoApi.eliminar(p.id);
       onListo();
     } catch (e) {
-      alert(e instanceof HttpError ? e.message : "No se pudo eliminar");
-    } finally {
+      setErrorEliminar(e instanceof HttpError ? e.message : "No se pudo eliminar");
       setBorrando(false);
     }
   }
@@ -177,7 +178,7 @@ function PresupuestoCard({
         </button>
       </div>
 
-      {confirmar && (
+      {confirmar && !errorEliminar && (
         <ConfirmDialog
           titulo="Eliminar presupuesto"
           mensaje={`¿Eliminar el presupuesto de "${p.categoriaNombre}" de ${MESES[p.mes - 1]} ${p.anio}?`}
@@ -186,6 +187,16 @@ function PresupuestoCard({
           procesando={borrando}
           onConfirmar={eliminar}
           onCancelar={() => setConfirmar(false)}
+        />
+      )}
+      {errorEliminar && (
+        <ConfirmDialog
+          titulo="No se pudo eliminar"
+          mensaje={errorEliminar}
+          textoConfirmar="Entendido"
+          textoCancelar="Cerrar"
+          onConfirmar={() => { setErrorEliminar(null); setConfirmar(false); }}
+          onCancelar={() => { setErrorEliminar(null); setConfirmar(false); }}
         />
       )}
     </div>

@@ -53,7 +53,10 @@ export function CotizacionesPage() {
       {criptos.loading && <div className="estado">Cargando criptomonedas…</div>}
       {criptos.error && <div className="estado estado-error">{criptos.error}</div>}
       {criptos.data && criptos.data.length === 0 && (
-        <div className="estado">No hay datos de cripto disponibles ahora.</div>
+        <div className="estado">
+          No se pudieron cargar las cotizaciones de cripto en este momento (el
+          servicio gratuito tiene un límite de consultas). Probá de nuevo en un rato.
+        </div>
       )}
       {criptos.data && criptos.data.length > 0 && (
         <div className="coti-grid">

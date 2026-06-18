@@ -7,6 +7,11 @@ import { ConfirmDialog } from "../components/ConfirmDialog";
 import { formatearMoneda, formatearFecha } from "../lib/format";
 import type { MetaAhorroResponse, CuentaResponse } from "../types";
 
+// Fecha de hoy en formato "YYYY-MM-DD" para los inputs date.
+function hoyIso(): string {
+  return new Date().toISOString().split("T")[0];
+}
+
 export function MetasPage() {
   const metas = useAsync(() => metaApi.listar());
   const cuentas = useAsync(() => cuentaApi.listar());
@@ -125,16 +130,17 @@ function MetaCard({
 }) {
   const [borrando, setBorrando] = useState(false);
   const [confirmar, setConfirmar] = useState(false);
+  const [errorEliminar, setErrorEliminar] = useState<string | null>(null);
   const pct = Math.min(m.porcentajeProgreso, 100);
 
   async function eliminar() {
     setBorrando(true);
+    setErrorEliminar(null);
     try {
       await metaApi.eliminar(m.id);
       onListo();
     } catch (e) {
-      alert(e instanceof HttpError ? e.message : "No se pudo eliminar");
-    } finally {
+      setErrorEliminar(e instanceof HttpError ? e.message : "No se pudo eliminar");
       setBorrando(false);
     }
   }
@@ -176,7 +182,7 @@ function MetaCard({
         </button>
       </div>
 
-      {confirmar && (
+      {confirmar && !errorEliminar && (
         <ConfirmDialog
           titulo="Eliminar meta"
           mensaje={`¿Eliminar la meta "${m.nombre}"? Lo que tengas ahorrado en ella no vuelve solo a tus cuentas.`}
@@ -185,6 +191,16 @@ function MetaCard({
           procesando={borrando}
           onConfirmar={eliminar}
           onCancelar={() => setConfirmar(false)}
+        />
+      )}
+      {errorEliminar && (
+        <ConfirmDialog
+          titulo="No se pudo eliminar"
+          mensaje={errorEliminar}
+          textoConfirmar="Entendido"
+          textoCancelar="Cerrar"
+          onConfirmar={() => { setErrorEliminar(null); setConfirmar(false); }}
+          onCancelar={() => { setErrorEliminar(null); setConfirmar(false); }}
         />
       )}
     </div>
@@ -221,6 +237,12 @@ function ModalMeta({
 
     if (nombre.trim().length < 2) {
       setError("El nombre debe tener al menos 2 caracteres");
+      return;
+    }
+
+    // La fecha límite no puede estar en el pasado.
+    if (fechaLimite && fechaLimite < hoyIso()) {
+      setError("La fecha límite no puede ser una fecha pasada.");
       return;
     }
 
@@ -287,6 +309,7 @@ function ModalMeta({
             id="fecha"
             type="date"
             value={fechaLimite}
+            min={hoyIso()}
             onChange={(e) => setFechaLimite(e.target.value)}
           />
         </div>
@@ -337,8 +360,15 @@ function ModalMovimientoMeta({
   onListo: () => void;
 }) {
   const esDeposito = tipo === "depositar";
-  // Si la meta tiene cuenta por defecto, la preseleccionamos.
-  const [cuentaId, setCuentaId] = useState<number>(meta.cuentaId ?? cuentas[0]?.id ?? 0);
+  // Si la meta tiene una cuenta asignada, depositar/retirar SOLO usa esa cuenta
+  // (queda fija). Si no tiene, el usuario elige cualquiera de sus cuentas activas.
+  const tieneCuentaFija = meta.cuentaId != null;
+  const cuentaFija = tieneCuentaFija
+    ? cuentas.find((c) => c.id === meta.cuentaId)
+    : undefined;
+  const [cuentaId, setCuentaId] = useState<number>(
+    meta.cuentaId ?? cuentas[0]?.id ?? 0
+  );
   const [monto, setMonto] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
@@ -411,7 +441,17 @@ function ModalMovimientoMeta({
 
         <div className="campo">
           <label htmlFor="cuenta">{esDeposito ? "Desde la cuenta" : "Hacia la cuenta"}</label>
-          {cuentas.length === 0 ? (
+          {tieneCuentaFija ? (
+            // La meta tiene cuenta asignada: queda fija, no se puede elegir otra.
+            <div className="cuenta-fija">
+              {cuentaFija
+                ? `${cuentaFija.nombre} (${formatearMoneda(cuentaFija.saldo)})`
+                : "La cuenta asignada a esta meta no está disponible."}
+              <span className="cuenta-fija-nota">
+                Esta meta está atada a esta cuenta.
+              </span>
+            </div>
+          ) : cuentas.length === 0 ? (
             <p style={{ fontSize: 13, color: "var(--error)" }}>No tenés cuentas activas.</p>
           ) : (
             <select

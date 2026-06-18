@@ -31,6 +31,7 @@ export function ReglasPage() {
 
   const [modalAbierto, setModalAbierto] = useState(false);
   const [aDesactivar, setADesactivar] = useState<ReglaRecurrenteResponse | null>(null);
+  const [aReactivar, setAReactivar] = useState<ReglaRecurrenteResponse | null>(null);
 
   function recargar() {
     reglas.reload();
@@ -110,7 +111,9 @@ export function ReglasPage() {
                       Desactivar
                     </button>
                   ) : (
-                    <BotonReactivar id={r.id} onListo={recargar} />
+                    <button className="btn-link" onClick={() => setAReactivar(r)}>
+                      Reactivar
+                    </button>
                   )}
                 </td>
               </tr>
@@ -134,6 +137,17 @@ export function ReglasPage() {
           onCerrar={() => setADesactivar(null)}
           onListo={() => {
             setADesactivar(null);
+            recargar();
+          }}
+        />
+      )}
+
+      {aReactivar && (
+        <DialogoReactivar
+          regla={aReactivar}
+          onCerrar={() => setAReactivar(null)}
+          onListo={() => {
+            setAReactivar(null);
             recargar();
           }}
         />
@@ -193,26 +207,53 @@ function DialogoDesactivar({
   );
 }
 
-// Botón reactivar (vuelve a activar una regla desactivada)
-function BotonReactivar({ id, onListo }: { id: number; onListo: () => void }) {
+// Diálogo de reactivación (confirm lindo, igual que desactivar)
+function DialogoReactivar({
+  regla,
+  onCerrar,
+  onListo,
+}: {
+  regla: ReglaRecurrenteResponse;
+  onCerrar: () => void;
+  onListo: () => void;
+}) {
   const [procesando, setProcesando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function reactivar() {
     setProcesando(true);
+    setError(null);
     try {
-      await reglaApi.reactivar(id);
+      await reglaApi.reactivar(regla.id);
       onListo();
     } catch (e) {
-      alert(e instanceof HttpError ? e.message : "No se pudo reactivar");
-    } finally {
+      setError(e instanceof HttpError ? e.message : "No se pudo reactivar");
       setProcesando(false);
     }
   }
 
+  if (error) {
+    return (
+      <ConfirmDialog
+        titulo="No se pudo reactivar"
+        mensaje={error}
+        textoConfirmar="Entendido"
+        textoCancelar="Cerrar"
+        onConfirmar={onCerrar}
+        onCancelar={onCerrar}
+      />
+    );
+  }
+
   return (
-    <button className="btn-link" onClick={reactivar} disabled={procesando}>
-      {procesando ? "…" : "Reactivar"}
-    </button>
+    <ConfirmDialog
+      titulo="Reactivar regla"
+      mensaje={`¿Volver a activar "${regla.descripcion}"? Va a empezar a generar movimientos automáticos otra vez.`}
+      textoConfirmar="Reactivar"
+      procesando={procesando}
+      onConfirmar={reactivar}
+      onCancelar={onCerrar}
+    />
   );
 }
 

@@ -54,7 +54,14 @@ export function MovimientosPage() {
         return true;
       })
       .slice()
-      .sort((a, b) => b.fecha.localeCompare(a.fecha));
+      .sort((a, b) => {
+        // Primero por fecha (día) descendente. Dentro del mismo día, como los
+        // movimientos no guardan hora, desempatamos por id: un id más alto se
+        // creó después, así el más reciente del día queda arriba.
+        const porFecha = b.fecha.localeCompare(a.fecha);
+        if (porFecha !== 0) return porFecha;
+        return b.id - a.id;
+      });
   }, [movimientos.data, desde, hasta]);
 
   const grupos = useMemo(() => {
