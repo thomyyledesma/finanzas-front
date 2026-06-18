@@ -27,6 +27,7 @@ export function MovimientosPage() {
 
   const [desde, setDesde] = useState("");
   const [hasta, setHasta] = useState("");
+  const [categoriaFiltro, setCategoriaFiltro] = useState<number>(0); // 0 = todas
 
   function abrirNuevo() {
     setEditar(null);
@@ -51,6 +52,7 @@ export function MovimientosPage() {
       .filter((m) => {
         if (desde && m.fecha < desde) return false;
         if (hasta && m.fecha > hasta) return false;
+        if (categoriaFiltro !== 0 && m.categoriaId !== categoriaFiltro) return false;
         return true;
       })
       .slice()
@@ -62,7 +64,7 @@ export function MovimientosPage() {
         if (porFecha !== 0) return porFecha;
         return b.id - a.id;
       });
-  }, [movimientos.data, desde, hasta]);
+  }, [movimientos.data, desde, hasta, categoriaFiltro]);
 
   const grupos = useMemo(() => {
     const mapa = new Map<string, MovimientoResponse[]>();
@@ -73,7 +75,7 @@ export function MovimientosPage() {
     return Array.from(mapa.entries());
   }, [lista]);
 
-  const hayFiltro = desde !== "" || hasta !== "";
+  const hayFiltro = desde !== "" || hasta !== "" || categoriaFiltro !== 0;
 
   return (
     <>
@@ -100,12 +102,28 @@ export function MovimientosPage() {
           <label htmlFor="hasta">Hasta</label>
           <input id="hasta" type="date" value={hasta} max={hoyIso()} onChange={(e) => setHasta(e.target.value)} />
         </div>
+        <div className="filtro-campo">
+          <label htmlFor="catFiltro">Categoría</label>
+          <select
+            id="catFiltro"
+            value={categoriaFiltro}
+            onChange={(e) => setCategoriaFiltro(Number(e.target.value))}
+          >
+            <option value={0}>Todas</option>
+            {(categorias.data ?? []).map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
         {hayFiltro && (
           <button
             className="btn btn-secundario btn-chico"
             onClick={() => {
               setDesde("");
               setHasta("");
+              setCategoriaFiltro(0);
             }}
           >
             Limpiar filtro

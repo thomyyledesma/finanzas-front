@@ -660,3 +660,55 @@
   font-family: var(--font-body);
 }
 .sidebar-user-info:hover { background: var(--verde-700); }
+
+/* Select dentro del filtro de movimientos (mismo look que los inputs date) */
+.filtro-campo select {
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 9px 12px;
+  border: 1.5px solid var(--crema-700);
+  border-radius: var(--radio);
+  background: #fff;
+  color: var(--tinta);
+  cursor: pointer;
+}
+.filtro-campo select:focus {
+  outline: none;
+  border-color: var(--ambar);
+  box-shadow: 0 0 0 3px rgba(217, 138, 61, 0.18);
+}
+
+/* Filtro de fechas en el panel de análisis (sobre fondo verde oscuro) */
+.analisis-fechas {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.analisis-fecha-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.analisis-fecha-campo label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--verde-200);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.analisis-fecha-campo input {
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 9px 12px;
+  border: 1.5px solid var(--verde-700);
+  border-radius: var(--radio);
+  background: #fff;
+  color: var(--tinta);
+}
+.analisis-fecha-campo input:focus {
+  outline: none;
+  border-color: var(--ambar);
+  box-shadow: 0 0 0 3px rgba(217, 138, 61, 0.25);
+}

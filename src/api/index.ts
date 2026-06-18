@@ -113,7 +113,15 @@ export const reglaApi = {
 
 // --- Integraciones externas ---
 export const externoApi = {
-  analisis: () => http.get<AnalisisResponse>("/analisis"),
+  analisis: (desde?: string, hasta?: string) => {
+    // El backend tiene DOS endpoints: /analisis (todo) y /analisis/periodo
+    // (requiere desde Y hasta). Elegimos según si vienen las dos fechas.
+    if (desde && hasta) {
+      const params = new URLSearchParams({ desde, hasta });
+      return http.get<AnalisisResponse>(`/analisis/periodo?${params.toString()}`);
+    }
+    return http.get<AnalisisResponse>("/analisis");
+  },
   dolares: () => http.get<CotizacionDTO[]>("/cotizaciones/dolares"),
   divisas: () => http.get<CotizacionDTO[]>("/cotizaciones/divisas"),
   criptos: () => http.get<CriptoDTO[]>("/criptos"),
