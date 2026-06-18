@@ -109,6 +109,8 @@ export const reglaApi = {
   desactivar: (id: number) => http.del<void>(`/reglas-recurrentes/${id}`),
   reactivar: (id: number) =>
     http.post<ReglaRecurrenteResponse>(`/reglas-recurrentes/${id}/reactivar`),
+  ejecutarAhora: (id: number) =>
+    http.post<ReglaRecurrenteResponse>(`/reglas-recurrentes/${id}/ejecutar-ahora`),
 };
 
 // --- Integraciones externas ---

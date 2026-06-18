@@ -32,6 +32,7 @@ export function ReglasPage() {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [aDesactivar, setADesactivar] = useState<ReglaRecurrenteResponse | null>(null);
   const [aReactivar, setAReactivar] = useState<ReglaRecurrenteResponse | null>(null);
+  const [aEjecutar, setAEjecutar] = useState<ReglaRecurrenteResponse | null>(null);
 
   function recargar() {
     reglas.reload();
@@ -107,9 +108,18 @@ export function ReglasPage() {
                 </td>
                 <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
                   {r.activa ? (
-                    <button className="btn-link peligro" onClick={() => setADesactivar(r)}>
-                      Desactivar
-                    </button>
+                    <>
+                      <button className="btn-link" onClick={() => setAEjecutar(r)}>
+                        Ejecutar ahora
+                      </button>
+                      <button
+                        className="btn-link peligro"
+                        onClick={() => setADesactivar(r)}
+                        style={{ marginLeft: 12 }}
+                      >
+                        Desactivar
+                      </button>
+                    </>
                   ) : (
                     <button className="btn-link" onClick={() => setAReactivar(r)}>
                       Reactivar
@@ -148,6 +158,17 @@ export function ReglasPage() {
           onCerrar={() => setAReactivar(null)}
           onListo={() => {
             setAReactivar(null);
+            recargar();
+          }}
+        />
+      )}
+
+      {aEjecutar && (
+        <DialogoEjecutar
+          regla={aEjecutar}
+          onCerrar={() => setAEjecutar(null)}
+          onListo={() => {
+            setAEjecutar(null);
             recargar();
           }}
         />
@@ -252,6 +273,71 @@ function DialogoReactivar({
       textoConfirmar="Reactivar"
       procesando={procesando}
       onConfirmar={reactivar}
+      onCancelar={onCerrar}
+    />
+  );
+}
+
+// Diálogo de ejecución inmediata (dispara la regla al instante)
+function DialogoEjecutar({
+  regla,
+  onCerrar,
+  onListo,
+}: {
+  regla: ReglaRecurrenteResponse;
+  onCerrar: () => void;
+  onListo: () => void;
+}) {
+  const [procesando, setProcesando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [listo, setListo] = useState(false);
+
+  async function ejecutar() {
+    setProcesando(true);
+    setError(null);
+    try {
+      await reglaApi.ejecutarAhora(regla.id);
+      setProcesando(false);
+      setListo(true);
+    } catch (e) {
+      setError(e instanceof HttpError ? e.message : "No se pudo ejecutar");
+      setProcesando(false);
+    }
+  }
+
+  if (error) {
+    return (
+      <ConfirmDialog
+        titulo="No se pudo ejecutar"
+        mensaje={error}
+        textoConfirmar="Entendido"
+        textoCancelar="Cerrar"
+        onConfirmar={onCerrar}
+        onCancelar={onCerrar}
+      />
+    );
+  }
+
+  if (listo) {
+    return (
+      <ConfirmDialog
+        titulo="Regla ejecutada"
+        mensaje="Se generó el movimiento y se envió el mail de notificación. La próxima ejecución automática quedó reprogramada."
+        textoConfirmar="Listo"
+        textoCancelar="Cerrar"
+        onConfirmar={onListo}
+        onCancelar={onListo}
+      />
+    );
+  }
+
+  return (
+    <ConfirmDialog
+      titulo="Ejecutar ahora"
+      mensaje={`¿Ejecutar "${regla.descripcion}" en este momento? Se va a generar el movimiento ahora mismo, se va a enviar el mail de aviso y se reprogramará la próxima ejecución automática.`}
+      textoConfirmar="Ejecutar"
+      procesando={procesando}
+      onConfirmar={ejecutar}
       onCancelar={onCerrar}
     />
   );
